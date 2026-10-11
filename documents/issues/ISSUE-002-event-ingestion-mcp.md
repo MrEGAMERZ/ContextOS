@@ -1,6 +1,6 @@
 # Issue #2: Event Ingestion Pipeline & Alexa+ MCP Server
 
-**Status:** Queued  
+**Status:** Closed (Resolved by [PR #2](../pull_requests/PR-002-event-ingestion-mcp.md))  
 **Shipment:** Shipment 2  
 **Labels:** `mcp`, `alexa`, `ingestion`, `shipment-2`
 
