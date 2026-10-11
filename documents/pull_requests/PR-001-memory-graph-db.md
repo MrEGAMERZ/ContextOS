@@ -3,7 +3,7 @@
 **Branch:** `feat/shipment-1-memory-graph-db` -> `main`  
 **Shipment:** Shipment 1 (`v0.1.0-shipment1`)  
 **Status:** Merged  
-**Related Issue:** #1 ([docs/issues/ISSUE-001-memory-graph-db.md](docs/issues/ISSUE-001-memory-graph-db.md))
+**Related Issue:** #1 ([documents/issues/ISSUE-001-memory-graph-db.md](../issues/ISSUE-001-memory-graph-db.md))
 
 ## Summary
 Implements the foundational relational Memory Graph schema, asynchronous database engine, graph repository, seed data, and REST API endpoints for ContextOS.

@@ -1,6 +1,6 @@
 # Issue #1: Memory Graph Engine & Database Foundation
 
-**Status:** Open  
+**Status:** Closed (Resolved by [PR #1](../pull_requests/PR-001-memory-graph-db.md))  
 **Shipment:** Shipment 1  
 **Labels:** `backend`, `database`, `core`, `shipment-1`
 
