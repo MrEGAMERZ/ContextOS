@@ -16,6 +16,7 @@ from app.schemas.event import EventRead, EventCreate
 from app.schemas.audit import AuditLogRead
 from app.mcp.router import router as mcp_router
 from app.engine.router import router as ingestion_router
+from app.ai.router import router as ai_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -44,6 +45,7 @@ app.add_middleware(
 # Routers
 app.include_router(mcp_router)
 app.include_router(ingestion_router)
+app.include_router(ai_router)
 
 @app.get("/health")
 async def health_check():
