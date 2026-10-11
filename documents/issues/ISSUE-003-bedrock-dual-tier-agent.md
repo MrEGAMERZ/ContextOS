@@ -1,6 +1,6 @@
 # Issue #3: Dual-Tier Bedrock Agent & Chain-of-Thought Engine
 
-**Status:** Queued  
+**Status:** Closed (Resolved by [PR #3](../pull_requests/PR-003-bedrock-dual-tier-agent.md))  
 **Shipment:** Shipment 3  
 **Labels:** `bedrock`, `ai`, `cot`, `aws-builder`, `shipment-3`
 
