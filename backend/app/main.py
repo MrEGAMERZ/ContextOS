@@ -1,7 +1,9 @@
+import os
 from contextlib import asynccontextmanager
 from typing import List, Optional
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -46,6 +48,15 @@ app.add_middleware(
 app.include_router(mcp_router)
 app.include_router(ingestion_router)
 app.include_router(ai_router)
+
+DASHBOARD_PATH = os.path.join(os.path.dirname(__file__), "static", "dashboard.html")
+
+@app.get("/")
+@app.get("/dashboard")
+async def serve_dashboard():
+    if os.path.exists(DASHBOARD_PATH):
+        return FileResponse(DASHBOARD_PATH)
+    return {"message": "ContextOS API running. Dashboard file not found."}
 
 @app.get("/health")
 async def health_check():

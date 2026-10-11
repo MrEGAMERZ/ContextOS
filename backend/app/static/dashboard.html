@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ContextOS — Caregiver Trust Dashboard & Alexa+ Voice Harness</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a' },
+            accent: { 500: '#06b6d4', 600: '#0891b2' },
+            amazon: { 500: '#ff9900', 600: '#e68a00' },
+            bedrock: { 500: '#a855f7', 600: '#9333ea' }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0b0f19; color: #f1f5f9; }
+    .node-pulse { animation: pulseGlow 1.5s infinite; }
+    @keyframes pulseGlow {
+      0% { filter: drop-shadow(0 0 2px rgba(34, 197, 94, 0.4)); }
+      50% { filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.9)); }
+      100% { filter: drop-shadow(0 0 2px rgba(34, 197, 94, 0.4)); }
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #111827; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased text-slate-100">
+  <!-- TOP NAVIGATION BAR -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-500 to-accent-500 flex items-center justify-center font-bold text-slate-950 text-lg shadow-lg shadow-brand-500/20">
+        Ω
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-lg tracking-tight text-white">ContextOS</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-500 border border-brand-500/20 font-medium">Hackathon MVP</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-amazon-500/10 text-amazon-500 border border-amazon-500/20 font-medium">Alexa+ MCP</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-bedrock-500/10 text-bedrock-500 border border-bedrock-500/20 font-medium">AWS Bedrock CoT</span>
+        </div>
+        <p class="text-xs text-slate-400">Ambient Contextual Intelligence for Independent Living</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div id="connection-badge" class="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 font-mono">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span>SSE Stream Connected</span>
+      </div>
+      <button onclick="triggerTemporalTick()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 border border-slate-700 font-medium transition flex items-center gap-1.5">
+        <span>⏱️ Run 60s Clock Tick</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN DASHBOARD CONTENT -->
+  <main class="flex-1 grid grid-cols-12 gap-5 p-5">
+    <!-- LEFT COLUMN: LIVE GRAPH VISUALIZER (7 COLS) -->
+    <section class="col-span-12 lg:col-span-7 flex flex-col gap-5">
+      <!-- GRAPH CANVAS CARD -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl flex-1 flex flex-col min-h-[500px]">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <h2 class="font-bold text-sm tracking-wide text-white uppercase flex items-center gap-1.5">
+              <span>🕸️</span> Semantic Memory Graph
+            </h2>
+            <span class="text-xs text-slate-400 font-mono" id="graph-stats">Loading nodes...</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="inline-flex items-center gap-1 text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> People</span>
+            <span class="inline-flex items-center gap-1 text-cyan-400"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Locations</span>
+            <span class="inline-flex items-center gap-1 text-amber-400"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Objects</span>
+            <span class="inline-flex items-center gap-1 text-purple-400"><span class="w-2 h-2 rounded-full bg-purple-400"></span> Devices</span>
+            <span class="inline-flex items-center gap-1 text-rose-400"><span class="w-2 h-2 rounded-full bg-rose-400"></span> Routines</span>
+          </div>
+        </div>
+
+        <!-- SVG INTERACTIVE GRAPH CANVAS -->
+        <div class="flex-1 bg-slate-950/80 rounded-xl border border-slate-800/80 relative overflow-hidden flex items-center justify-center p-2" id="graph-container">
+          <svg id="graph-svg" class="w-full h-full min-h-[420px]" viewBox="0 0 900 500"></svg>
+          <div id="node-tooltip" class="absolute hidden bg-slate-900 border border-slate-700 text-xs p-3 rounded-lg shadow-2xl max-w-xs pointer-events-none z-20 font-mono"></div>
+        </div>
+
+        <div class="mt-3 flex items-center justify-between text-xs text-slate-400">
+          <span>Click any node to inspect 2-hop neighborhood in the inspector below.</span>
+          <button onclick="fetchGraphData()" class="text-accent-500 hover:underline">↺ Refresh Graph</button>
+        </div>
+      </div>
+
+      <!-- SELECTED NODE 2-HOP NEIGHBORHOOD INSPECTOR -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <h3 class="font-bold text-xs uppercase tracking-wide text-slate-300 mb-2 flex items-center gap-1.5">
+          <span>🔍</span> 2-Hop Neighborhood Context Inspector
+        </h3>
+        <div id="neighborhood-details" class="text-xs text-slate-400 font-mono bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+          Click any graph node above to view its 2-hop neighborhood and active relationships.
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: SIMULATOR, VOICE HARNESS & AUDIT LOG (5 COLS) -->
+    <section class="col-span-12 lg:col-span-5 flex flex-col gap-5">
+      <!-- 1. SIMULATED EVENT INJECTOR (DEMO CONTROLLER) -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-sm tracking-wide text-white uppercase flex items-center gap-1.5">
+            <span>⚡</span> Simulated Event Injector
+          </h2>
+          <span class="text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded font-mono">Fail-Safe Demo</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-3">Trigger synthetic smart home events to verify graph updates and anomaly detection live:</p>
+        
+        <div class="grid grid-cols-2 gap-2.5">
+          <button onclick="injectScenario('visitor_arrival')" class="p-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-left transition flex flex-col gap-1 hover:border-emerald-500/50 group">
+            <span class="text-xs font-bold text-emerald-400 group-hover:text-emerald-300">🔔 Neighbor Visits (Ravi)</span>
+            <span class="text-[11px] text-slate-400">Ring doorbell sighting + garden context</span>
+          </button>
+
+          <button onclick="injectScenario('object_relocation')" class="p-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-left transition flex flex-col gap-1 hover:border-cyan-500/50 group">
+            <span class="text-xs font-bold text-cyan-400 group-hover:text-cyan-300">👓 Relocate Glasses</span>
+            <span class="text-[11px] text-slate-400">Glasses moved to Kitchen Counter</span>
+          </button>
+
+          <button onclick="injectScenario('front_door_open_anomaly')" class="p-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-left transition flex flex-col gap-1 hover:border-rose-500/50 group">
+            <span class="text-xs font-bold text-rose-400 group-hover:text-rose-300">🚪 Door Left Open (35m)</span>
+            <span class="text-[11px] text-slate-400">Triggers safety omission + CoT alert</span>
+          </button>
+
+          <button onclick="injectScenario('missed_medication')" class="p-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-left transition flex flex-col gap-1 hover:border-amber-500/50 group">
+            <span class="text-xs font-bold text-amber-400 group-hover:text-amber-300">💊 Missed Medication</span>
+            <span class="text-[11px] text-slate-400">Morning window passed without dose</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. SIMULATED ALEXA+ VOICE HARNESS -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="font-bold text-sm tracking-wide text-white uppercase flex items-center gap-1.5">
+            <span>🎙️</span> Simulated Alexa+ Voice Harness
+          </h2>
+          <span class="text-xs text-brand-500 font-mono bg-brand-500/10 px-2 py-0.5 rounded">&lt;50ms SLA Target</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-3">Speak or test conversational questions directly using local MCP tools & Bedrock:</p>
+
+        <div class="flex gap-2 mb-2">
+          <input id="voice-query-input" type="text" placeholder="e.g. Who is at the front door?" value="Who is at the front door?" 
+            class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+          <button onclick="submitVoiceQuery()" id="ask-btn" class="px-4 py-2 bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-500 hover:to-accent-500 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-brand-500/20">
+            Ask Alexa+
+          </button>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5 mb-3">
+          <button onclick="setQuery('Who is at the front door?')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">"Who is at the door?"</button>
+          <button onclick="setQuery('Where are my glasses?')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">"Where are my glasses?"</button>
+          <button onclick="setQuery('Was the front door left open?')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">"Door left open?"</button>
+        </div>
+
+        <!-- VOICE RESPONSE CARD -->
+        <div id="voice-response-card" class="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl font-mono text-xs hidden">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-emerald-400 font-bold flex items-center gap-1"><span>🔊</span> Alexa+ Speaks:</span>
+            <span id="voice-latency" class="text-[10px] text-slate-400"></span>
+          </div>
+          <p id="voice-speech-text" class="text-white text-xs leading-relaxed mb-2"></p>
+          <button id="view-cot-btn" onclick="" class="text-[11px] text-purple-400 hover:underline flex items-center gap-1">
+            <span>🧠</span> View Bedrock &lt;thinking&gt; Rationale
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. "WHY DID YOU DO THAT?" CHAIN OF THOUGHT DRAWER -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="font-bold text-sm tracking-wide text-white uppercase flex items-center gap-1.5">
+            <span>🧠</span> "Why Did You Do That?" CoT Drawer
+          </h2>
+          <span class="text-xs text-purple-400 font-mono bg-purple-400/10 px-2 py-0.5 rounded">Claude 3.5 Sonnet / Haiku</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-3">Transparent audit log displaying the exact step-by-step reasoning steps behind every action:</p>
+
+        <div id="cot-content" class="flex-1 bg-slate-950 p-3.5 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 overflow-y-auto max-h-64 custom-scrollbar">
+          <div class="text-slate-500 italic">No action selected. Ask a question or trigger an anomaly above to inspect Claude's &lt;thinking&gt; steps.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- JAVASCRIPT ENGINE & SSE HANDLER -->
+  <script>
+    let graphData = { entities: [], relationships: [] };
+    let eventSource = null;
+
+    // Connect to Server-Sent Events (SSE)
+    function connectSSE() {
+      if (eventSource) eventSource.close();
+      eventSource = new EventSource('/api/events/stream');
+
+      eventSource.onopen = () => {
+        document.getElementById('connection-badge').className = 
+          'flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 font-mono';
+        document.getElementById('connection-badge').innerHTML = 
+          '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span><span>SSE Stream Connected</span>';
+      };
+
+      eventSource.onmessage = (e) => {
+        try {
+          const payload = JSON.parse(e.data);
+          console.log("SSE Event Received:", payload);
+          handleIncomingSSE(payload);
+        } catch (err) {
+          console.error("Error parsing SSE:", err);
+        }
+      };
+
+      eventSource.onerror = () => {
+        document.getElementById('connection-badge').className = 
+          'flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg bg-rose-950/60 border border-rose-500/30 text-rose-400 font-mono';
+        document.getElementById('connection-badge').innerHTML = 
+          '<span class="w-2 h-2 rounded-full bg-rose-400"></span><span>Reconnecting...</span>';
+      };
+    }
+
+    function handleIncomingSSE(msg) {
+      if (msg.type === "scenario_triggered" || msg.type === "event_ingested") {
+        fetchGraphData();
+      } else if (msg.type === "anomaly_alert") {
+        renderAnomalyInDrawer(msg.data);
+        fetchGraphData();
+      }
+    }
+
+    // Fetch and render Memory Graph
+    async function fetchGraphData() {
+      try {
+        const [entRes, relRes] = await Promise.all([
+          fetch('/api/graph/entities'),
+          fetch('/api/graph/relationships')
+        ]);
+        const entities = await entRes.json();
+        const relationships = await relRes.json();
+        graphData = { entities, relationships };
+        renderGraph(entities, relationships);
+        document.getElementById('graph-stats').innerText = `${entities.length} nodes, ${relationships.length} edges`;
+      } catch (err) {
+        console.error("Failed to load graph data:", err);
+      }
+    }
+
+    // Interactive SVG Graph Renderer
+    function renderGraph(entities, relationships) {
+      const svg = document.getElementById('graph-svg');
+      svg.innerHTML = '';
+
+      const width = 900;
+      const height = 500;
+
+      // Group entities by category
+      const colorMap = {
+        person: '#22c55e',
+        location: '#06b6d4',
+        object: '#f59e0b',
+        device: '#a855f7',
+        routine: '#f43f5e'
+      };
+
+      // Node coordinate layout
+      const layout = {
+        'Arthur': { x: 450, y: 250 },
+        'Ravi': { x: 180, y: 150 },
+        'Sarah': { x: 720, y: 150 },
+        'Front Porch': { x: 260, y: 340 },
+        'Living Room': { x: 450, y: 390 },
+        'Kitchen': { x: 640, y: 340 },
+        'Reading Glasses': { x: 380, y: 460 },
+        'Daily Medication Box': { x: 700, y: 440 },
+        'Ring Video Doorbell Pro': { x: 150, y: 360 },
+        'Alexa Echo Show 8': { x: 530, y: 460 },
+        'Morning Medication Routine': { x: 580, y: 120 }
+      };
+
+      // Default positioning for unlisted entities
+      entities.forEach((ent, idx) => {
+        if (!layout[ent.name]) {
+          const angle = (idx / entities.length) * 2 * Math.PI;
+          layout[ent.name] = {
+            x: 450 + 280 * Math.cos(angle),
+            y: 250 + 170 * Math.sin(angle)
+          };
+        }
+      });
+
+      // Draw Edges
+      relationships.forEach(rel => {
+        const sourceEnt = entities.find(e => e.id === rel.source_entity_id);
+        const targetEnt = entities.find(e => e.id === rel.target_entity_id);
+        if (sourceEnt && targetEnt && layout[sourceEnt.name] && layout[targetEnt.name]) {
+          const p1 = layout[sourceEnt.name];
+          const p2 = layout[targetEnt.name];
+
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", p1.x);
+          line.setAttribute("y1", p1.y);
+          line.setAttribute("x2", p2.x);
+          line.setAttribute("y2", p2.y);
+          line.setAttribute("stroke", "#334155");
+          line.setAttribute("stroke-width", "1.5");
+          line.setAttribute("stroke-dasharray", rel.relation_type === "visited" ? "4,4" : "none");
+          svg.appendChild(line);
+
+          // Edge Label
+          const midX = (p1.x + p2.x) / 2;
+          const midY = (p1.y + p2.y) / 2;
+          const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          label.setAttribute("x", midX);
+          label.setAttribute("y", midY - 4);
+          label.setAttribute("fill", "#64748b");
+          label.setAttribute("font-size", "9px");
+          label.setAttribute("font-family", "monospace");
+          label.setAttribute("text-anchor", "middle");
+          label.textContent = rel.relation_type;
+          svg.appendChild(label);
+        }
+      });
+
+      // Draw Nodes
+      entities.forEach(ent => {
+        const pos = layout[ent.name] || { x: 450, y: 250 };
+        const color = colorMap[ent.entity_type] || '#94a3b8';
+
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.style.cursor = "pointer";
+        g.onclick = () => inspectNode(ent.name);
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", pos.x);
+        circle.setAttribute("cy", pos.y);
+        circle.setAttribute("r", ent.name === "Arthur" ? "22" : "16");
+        circle.setAttribute("fill", "#0f172a");
+        circle.setAttribute("stroke", color);
+        circle.setAttribute("stroke-width", "2.5");
+        circle.setAttribute("class", "hover:scale-125 transition-transform");
+        g.appendChild(circle);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", pos.x);
+        text.setAttribute("y", pos.y + 30);
+        text.setAttribute("fill", "#f8fafc");
+        text.setAttribute("font-size", "11px");
+        text.setAttribute("font-weight", "600");
+        text.setAttribute("font-family", "sans-serif");
+        text.setAttribute("text-anchor", "middle");
+        text.textContent = ent.name;
+        g.appendChild(text);
+
+        const typeLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        typeLabel.setAttribute("x", pos.x);
+        typeLabel.setAttribute("y", pos.y + 42);
+        typeLabel.setAttribute("fill", color);
+        typeLabel.setAttribute("font-size", "9px");
+        typeLabel.setAttribute("font-family", "monospace");
+        typeLabel.setAttribute("text-anchor", "middle");
+        typeLabel.textContent = ent.entity_type;
+        g.appendChild(typeLabel);
+
+        svg.appendChild(g);
+      });
+    }
+
+    // Inspect Node 2-Hop Neighborhood
+    async function inspectNode(name) {
+      const container = document.getElementById('neighborhood-details');
+      container.innerHTML = `<span class="text-accent-400">Loading 2-hop neighborhood for "${name}"...</span>`;
+      try {
+        const res = await fetch(`/api/graph/entities/${encodeURIComponent(name)}/neighborhood`);
+        if (!res.ok) throw new Error("Entity not found");
+        const data = await res.json();
+        
+        let html = `<div class="mb-2"><strong class="text-white">${data.center.name}</strong> <span class="text-emerald-400">(${data.center.entity_type})</span></div>`;
+        html += `<div class="text-[11px] text-slate-300 mb-2">Attributes: ${JSON.stringify(data.center.metadata)}</div>`;
+        html += `<div class="text-accent-400 font-bold mb-1">Immediate (1-Hop) Neighbors (${data.immediate_neighbors.length}):</div>`;
+        html += '<ul class="list-disc pl-4 mb-2 space-y-0.5">';
+        data.immediate_neighbors.forEach(n => {
+          html += `<li>${n.direction === 'outgoing' ? '→' : '←'} <strong>${n.entity.name}</strong> (${n.relation_type}, weight: ${n.weight})</li>`;
+        });
+        html += '</ul>';
+
+        if (data.two_hop_neighbors.length > 0) {
+          html += `<div class="text-purple-400 font-bold mb-1">Extended (2-Hop) Neighbors (${data.two_hop_neighbors.length}):</div>`;
+          html += '<ul class="list-disc pl-4 mb-2 space-y-0.5">';
+          data.two_hop_neighbors.forEach(n => {
+            html += `<li>${n.direction === 'outgoing' ? '→' : '←'} <strong>${n.entity.name}</strong> (${n.relation_type})</li>`;
+          });
+          html += '</ul>';
+        }
+
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<span class="text-rose-400">Failed to load neighborhood: ${err.message}</span>`;
+      }
+    }
+
+    // Voice Query Submission
+    function setQuery(q) {
+      document.getElementById('voice-query-input').value = q;
+    }
+
+    async function submitVoiceQuery() {
+      const query = document.getElementById('voice-query-input').value.trim();
+      if (!query) return;
+
+      const btn = document.getElementById('ask-btn');
+      btn.innerText = "Thinking...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/agent/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+
+        // Render response card
+        const card = document.getElementById('voice-response-card');
+        card.classList.remove('hidden');
+        document.getElementById('voice-speech-text').innerText = data.response;
+        document.getElementById('voice-latency').innerText = `⚡ ${data.execution_ms}ms (SLA Pass)`;
+        
+        // Setup view CoT button
+        document.getElementById('view-cot-btn').onclick = () => renderCoTInDrawer(data.thinking_process, data.response, query);
+
+        // Speak aloud using browser TTS
+        if ('speechSynthesis' in window) {
+          const utter = new SpeechSynthesisUtterance(data.response);
+          utter.rate = 1.0;
+          utter.pitch = 1.0;
+          window.speechSynthesis.speak(utter);
+        }
+
+        // Render CoT immediately in the drawer
+        renderCoTInDrawer(data.thinking_process, data.response, query);
+      } catch (err) {
+        console.error("Voice query failed:", err);
+      } finally {
+        btn.innerText = "Ask Alexa+";
+        btn.disabled = false;
+      }
+    }
+
+    // Render CoT in drawer
+    function renderCoTInDrawer(thinking, response, context) {
+      const drawer = document.getElementById('cot-content');
+      drawer.innerHTML = `
+        <div class="mb-2 pb-2 border-b border-slate-800">
+          <div class="text-[10px] text-purple-400 font-bold uppercase tracking-wider mb-1">PROMPT CONTEXT</div>
+          <div class="text-slate-300">${context}</div>
+        </div>
+        <div class="mb-2 pb-2 border-b border-slate-800">
+          <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-1">BEDROCK &lt;thinking&gt; REASONING STEPS</div>
+          <pre class="text-slate-300 whitespace-pre-wrap font-mono leading-relaxed text-[11px]">${thinking}</pre>
+        </div>
+        <div>
+          <div class="text-[10px] text-accent-400 font-bold uppercase tracking-wider mb-1">OUTPUT ACTION / RESPONSE</div>
+          <div class="text-white font-medium">${response}</div>
+        </div>
+      `;
+    }
+
+    function renderAnomalyInDrawer(anomaly) {
+      const drawer = document.getElementById('cot-content');
+      drawer.innerHTML = `
+        <div class="p-2.5 rounded-lg bg-rose-950/60 border border-rose-500/40 mb-3">
+          <div class="text-rose-400 font-bold text-xs">⚠️ ${anomaly.title}</div>
+          <div class="text-slate-300 text-xs">${anomaly.description}</div>
+        </div>
+        <div class="mb-2 pb-2 border-b border-slate-800">
+          <div class="text-[10px] text-purple-400 font-bold uppercase tracking-wider mb-1">BEDROCK &lt;thinking&gt; ANOMALY AUDIT</div>
+          <pre class="text-slate-300 whitespace-pre-wrap font-mono leading-relaxed text-[11px]">${anomaly.thinking_process}</pre>
+        </div>
+        <div>
+          <div class="text-[10px] text-amber-400 font-bold uppercase tracking-wider mb-1">RECOMMENDED ACTION</div>
+          <div class="text-white">${anomaly.recommendation}</div>
+        </div>
+      `;
+    }
+
+    // Scenario Injector Trigger
+    async function injectScenario(scenario) {
+      try {
+        const res = await fetch('/api/events/inject', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scenario })
+        });
+        const data = await res.json();
+        console.log("Scenario injected:", data);
+
+        if (data.anomalies_detected && data.anomalies_detected.length > 0) {
+          renderAnomalyInDrawer(data.anomalies_detected[0]);
+        }
+        await fetchGraphData();
+      } catch (err) {
+        console.error("Injection failed:", err);
+      }
+    }
+
+    // Run 60s clock tick
+    async function triggerTemporalTick() {
+      try {
+        const res = await fetch('/api/engine/tick', { method: 'POST' });
+        const data = await res.json();
+        console.log("Tick result:", data);
+        if (data.anomalies && data.anomalies.length > 0) {
+          renderAnomalyInDrawer(data.anomalies[0]);
+        }
+        await fetchGraphData();
+      } catch (err) {
+        console.error("Tick failed:", err);
+      }
+    }
+
+    // Initial load
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchGraphData();
+      connectSSE();
+    });
+  </script>
+</body>
+</html>

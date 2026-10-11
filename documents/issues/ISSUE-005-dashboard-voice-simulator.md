@@ -1,6 +1,6 @@
 # Issue #5: Caregiver Trust Dashboard & Voice Simulator
 
-**Status:** Queued  
+**Status:** Closed (Resolved by [PR #5](../pull_requests/PR-005-dashboard-voice-simulator.md))  
 **Shipment:** Shipment 5  
 **Labels:** `frontend`, `ui`, `react-flow`, `voice-harness`, `shipment-5`
 
