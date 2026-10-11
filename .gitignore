@@ -1,14 +1,47 @@
-# OS files
-.DS_Store
-Thumbs.db
+# ==============================================================================
+# ContextOS - .gitignore
+# ==============================================================================
 
-# Python
+# ------------------------------------------------------------------------------
+# Operating System & Filesystem
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# ------------------------------------------------------------------------------
+# Environment, Credentials & Secrets
+# ------------------------------------------------------------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+*.env
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+secrets/
+credentials.json
+aws-credentials.json
+service-account*.json
+
+# ------------------------------------------------------------------------------
+# Python & Virtual Environments
+# ------------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -24,33 +57,94 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-.pytest_cache/
-.coverage
-htmlcov/
+MANIFEST
+
+# Virtual Environments
 .venv/
 venv/
 ENV/
-*.sqlite3
-*.db
+env/
+env.bak/
+venv.bak/
 
-# Node
+# Testing & Type Checking
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# ------------------------------------------------------------------------------
+# Node, JavaScript & Next.js
+# ------------------------------------------------------------------------------
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+lerna-debug.log*
+
+# Next.js / Frontend builds
 .next/
 out/
-build/
-.turbo
+.turbo/
+.turbo/
+.vercel
+dist/
 
-# Environment variables
-.env
-.env.local
-.env.*.local
+# ------------------------------------------------------------------------------
+# Databases, Local Storage & Caches
+# ------------------------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+postgres_data/
+pgdata/
+local_data/
+data/
+*.dump
+*.sql.gz
 
-# IDE
-.vscode/
+# ------------------------------------------------------------------------------
+# Logs & Process Output
+# ------------------------------------------------------------------------------
+logs/
+*.log
+*.log.*
+npm-debug.log*
+cloudflared.log
+ngrok.log
+
+# ------------------------------------------------------------------------------
+# IDEs & Developer Tooling
+# ------------------------------------------------------------------------------
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
 .idea/
+*.sublime-project
+*.sublime-workspace
 *.swp
 *.swo
+*~
+
+# ------------------------------------------------------------------------------
+# AI Agent Workspaces & Local Scratch
+# ------------------------------------------------------------------------------
+.gemini/
+.claude/
+.cursor/
+.gstack/
+scratch/
+tmp/
+temp/
