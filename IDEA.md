@@ -2845,3 +2845,117 @@ The hackathon rewards a working, creative application, not the size of the archi
 Therefore:
 
 > **Big vision. Small MVP. Deep integration. Excellent demo.**
+
+## Hackathon Accepted MVP Expansions (from /plan-ceo-review)
+1. **Live Graph Visualization**: Next.js dashboard with React Flow/D3.js to see semantic relationships in real-time.
+2. **Chain of Thought Endpoint**: Expose Bedrock's reasoning steps for UI display ("Why did you do that?").
+3. **Simulated Event Injector**: UI panel to blast synthetic events for a reliable demo.
+4. **Voice Memory Search (Alexa+)**: Full voice integration to interact with the OS naturally.
+5. **Proactive Insights**: Background cron worker generating daily insights and pattern detection.
+
+## Hackathon Revised MVP Architecture & Expansions (post-Review)
+1. **Primary Track Selection**: Alexa+ via a Self-hosted MCP Server.
+2. **Caregiver Trust Dashboard**: Next.js UI using React Flow to visualize semantic links and build user trust.
+3. **Chain of Thought Endpoint**: Parsing Claude 3.5 Sonnet on Bedrock via `<thinking>` tags.
+4. **Deterministic Anomaly Insights**: SQL-based heuristics identify patterns, invoking Bedrock with isolated subgraphs (avoids context/token exhaustion).
+5. **Simulated Event Injector**: Web-based controls to blast mock smart-home events to guarantee demo reliability.
+
+## Hackathon Concrete Engineering Specifications (Final Reconciliation)
+
+### 1. Primary Track Confirmation & Integration Method
+- **Selected Primary Track**: **Alexa+** via a **Self-Hosted MCP Server**.
+- **Transport**: Standard Streamable HTTP / Server-Sent Events (SSE) server running locally with SSL tunnel (Cloudflare Tunnel/ngrok) during development, deployable to AWS App Runner.
+- **Hardware/Perception Note**: All physical Ring/video inputs are modeled deterministically using the built-in Simulated Event Injector for the MVP demo.
+
+### 2. Dual-Tier Bedrock Model Strategy (Voice Timeout Safe)
+- **Voice Turn SLA**: Alexa requires responses in <8 seconds. To eliminate timeout risk:
+  - **Conversational Path**: **Claude 3.5 Haiku** on Amazon Bedrock processes live voice tool calls with a strict budget (<250 tokens), yielding <1.5s latency.
+  - **Asynchronous Deep Reasoning Path**: **Claude 3.5 Sonnet** operates in background queues, processing multi-hop graph inferences, generating rich `<thinking>` audit logs, and formulating complex insights.
+
+### 3. Memory Graph PostgreSQL DDL
+```sql
+CREATE TABLE entities (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    entity_type VARCHAR(64) NOT NULL, -- e.g., 'person', 'device', 'location', 'routine'
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE relationships (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source_entity_id UUID REFERENCES entities(id) ON DELETE CASCADE,
+    target_entity_id UUID REFERENCES entities(id) ON DELETE CASCADE,
+    relation_type VARCHAR(64) NOT NULL, -- e.g., 'located_in', 'associated_with', 'owns'
+    weight FLOAT DEFAULT 1.0,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(source_entity_id, target_entity_id, relation_type)
+);
+
+CREATE TABLE events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_type VARCHAR(128) NOT NULL, -- e.g., 'door_opened', 'motion_detected', 'query_asked'
+    source_device VARCHAR(128) NOT NULL,
+    payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+    occurred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE action_audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    action_type VARCHAR(128) NOT NULL,
+    trigger_event_id UUID REFERENCES events(id),
+    prompt_context TEXT NOT NULL,
+    thinking_process TEXT NOT NULL,
+    output_response TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### 4. Formal MCP Tool Schemas
+- **`get_entity_context(entity_name: str) -> dict`**: Retrieves the 2-hop relational neighborhood and recent observations for an entity.
+- **`get_recent_events(limit: int = 10, event_type: Optional[str] = None) -> list`**: Returns chronological stream of recent smart home events.
+- **`query_memory_graph(query: str) -> dict`**: Semantic lookup over entities and active temporal constraints.
+
+### 5. Anomaly & Omission Engine
+- **Event Triggers**: Immediate database event listeners evaluate immediate rule violations.
+- **Temporal Clock Tick**: A lightweight 60-second scheduled worker scans for missing expected state transitions (e.g., door open > 30 minutes, absence of morning motion).
+
+## Implementation Roadmap (Temporal Interrogation)
+
+- **HOUR 1 (Foundations)**:
+  - Initialize PostgreSQL schema (`entities`, `relationships`, `events`, `action_audit_logs`).
+  - Scaffold FastAPI project with database connection pool.
+  - Effort: *Human: ~1 hour / CC: ~5 min*
+- **HOUR 2-3 (Core Logic)**:
+  - Ingestion pipeline: map raw smart-home events to relational graph updates.
+  - Implement 3 fast (<50ms) MCP tools: `get_entity_context`, `get_recent_events`, `query_memory_graph`.
+  - Implement 60-second temporal omission detector for missed routines.
+  - Effort: *Human: ~3 hours / CC: ~15 min*
+- **HOUR 4-5 (Integration & Bedrock)**:
+  - Launch Streamable HTTP / SSE MCP server for Alexa+ integration.
+  - Wire up Bedrock Claude 3.5 Sonnet for async inference and `<thinking>` tag extraction into `action_audit_logs`.
+  - Build the Simulated Event Injector endpoint (`POST /api/events/inject`).
+  - Effort: *Human: ~3 hours / CC: ~20 min*
+- **HOUR 6+ (Dashboard & Verification)**:
+  - Next.js Caregiver Trust Dashboard with React Flow visualizer for graph nodes and edges.
+  - Provide Simulated Alexa+ Voice Harness as guaranteed demo contingency.
+  - Run end-to-end integration tests on full demo narrative (Doorbell -> Graph Update -> Alexa Voice Query -> CoT Audit Log).
+  - Effort: *Human: ~4 hours / CC: ~25 min*
+
+## GSTACK REVIEW REPORT
+
+| Category | Status | Findings / Dispositions |
+|---|---|---|
+| Strategy & Scope | PASS | Expanded to 10x ambient product: Caregiver Trust UI, Event Injector, Alexa+ MCP. |
+| Architecture | PASS | Dual-tier latency design: fast (<50ms) SQL tool lookups for voice, async Sonnet for reasoning. |
+| Error & Rescue | PASS | All exception classes (DB, Bedrock, MCP timeouts) explicitly rescued with fallbacks. |
+| Security | PASS | Boundary discipline enforced; LLMs have zero direct destructive mutation rights. |
+| Testing & Verification | PASS | Comprehensive test matrix from unit tests to full 3-minute scripted pitch scenario. |
+| Feasibility & SLA | PASS | Alexa 8s voice timeout secured; Simulated Voice Harness fallback provided. |
+
+### VERDICT: APPROVED (SCOPE EXPANSION)
+**OUTSIDE COVERAGE:** In-Host Adversarial Spec Reviewer (3 Iterations, all critical findings resolved).
+
+NO UNRESOLVED DECISIONS
