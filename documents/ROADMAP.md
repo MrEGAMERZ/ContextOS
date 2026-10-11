@@ -15,7 +15,7 @@ ContextOS is an ambient, context-aware AI assistance platform designed to unders
 | **Shipment 1** | **Memory Graph Engine & Database Foundation** (Entities, Relationships, Events, Audit Logs, SQLite/PostgreSQL Dual Engine) | `v0.1.0-shipment1` | Completed | PR #1 |
 | **Shipment 2** | **Event Ingestion Pipeline & Alexa+ MCP Server** (Streamable HTTP / SSE MCP Protocol, 3 High-Speed Voice Tools) | `v0.2.0-shipment2` | Completed | PR #2 |
 | **Shipment 3** | **Dual-Tier Bedrock Agent & Chain-of-Thought Engine** (Claude 3.5 Haiku/Sonnet, `<thinking>` Tag Extraction, Action Audit Logging) | `v0.3.0-shipment3` | Completed | PR #3 |
-| **Shipment 4** | **Anomaly & Omission Engine + Simulated Event Injector** (60s Temporal Clock, Routine Checking, Demo Scenarios) | `v0.4.0-shipment4` | Queued | PR #4 |
+| **Shipment 4** | **Anomaly & Omission Engine + Simulated Event Injector** (60s Temporal Clock, Routine Checking, Demo Scenarios) | `v0.4.0-shipment4` | Completed | PR #4 |
 | **Shipment 5** | **Caregiver Trust Dashboard & Voice Simulator** (Next.js UI, React Flow Graph, Live CoT Viewer, Alexa+ Voice Testbed) | `v0.5.0-shipment5` | Queued | PR #5 |
 
 ---

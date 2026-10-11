@@ -1,6 +1,6 @@
 # Issue #4: Anomaly & Omission Engine + Simulated Event Injector
 
-**Status:** Queued  
+**Status:** Closed (Resolved by [PR #4](../pull_requests/PR-004-anomaly-omission-engine.md))  
 **Shipment:** Shipment 4  
 **Labels:** `engine`, `anomaly`, `simulation`, `shipment-4`
 
