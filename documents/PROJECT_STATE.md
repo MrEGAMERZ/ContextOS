@@ -42,61 +42,47 @@ Unlike conventional smart home hubs (like Home Assistant, Ring, or Alexa routine
 
 The implementation is broken down into structured, parallelizable workstreams for agents:
 
-### Workstream 1: Database & Persistence Layer (`context_os/db`)
-- [ ] Initialize PostgreSQL Docker container (`docker-compose.yml`) with persistent volume.
-- [ ] Set up SQLAlchemy 2.0 async engine and session management.
-- [ ] Write declarative models matching the verified schema:
-  - `Entity`: `id`, `name`, `entity_type`, `metadata`, `created_at`, `updated_at`.
-  - `Relationship`: `id`, `source_entity_id`, `target_entity_id`, `relation_type`, `weight`, `metadata`, `updated_at`.
-  - `Event`: `id`, `event_type`, `source_device`, `payload`, `occurred_at`.
-  - `ActionAuditLog`: `id`, `action_type`, `trigger_event_id`, `prompt_context`, `thinking_process`, `output_response`, `created_at`.
-- [ ] Implement database indexes on `relationships(source_entity_id, relation_type)` and `events(occurred_at)`.
-- [ ] Seed initial home baseline entities (rooms, primary users, known objects like "glasses", "medicine").
+### Workstream 1: Database & Persistence Layer (`backend/app/models`, `backend/app/database.py`)
+- [x] Dual-engine support: SQLite (`aiosqlite`) for zero-friction local run/demo, PostgreSQL (`asyncpg`) for production.
+- [x] Set up SQLAlchemy 2.0 async engine and session management.
+- [x] Declarative models: `Entity`, `Relationship`, `Event`, `ActionAuditLog`.
+- [x] Database indexes on `entities(name, entity_type)`, `relationships(source_entity_id, target_entity_id, relation_type)`, and `events(occurred_at)`.
+- [x] Seed initial home baseline entities (Arthur homeowner, Ravi neighbor, Sarah daughter, devices, objects, routines).
 
-### Workstream 2: Core Context & Ingestion Engine (`context_os/engine`)
-- [ ] Build Event Normalizer: Ingest incoming raw events and update graph state:
-  - Example: `door_opened` event updates `front_door.state = "open"`.
-  - Example: `object_detected` event updates `glasses.located_in -> living_room_table`.
-- [ ] Implement Anomaly & Temporal Omission Engine:
-  - Immediate state-change rule evaluation (e.g., door opened during restricted hours).
-  - 60-second scheduled heartbeat tick detecting omissions (e.g., `front_door.state == 'open'` for > 30 minutes, or absence of expected morning movement).
+### Workstream 2: Core Context & Ingestion Engine (`backend/app/engine/ingestion.py`, `anomaly.py`)
+- [x] Event Normalizer: Ingest incoming raw events and update graph state:
+  - `doorbell_rung` / `person_detected` updates `last_seen` and links `visited` edge.
+  - `object_moved` updates `located_in` edge and `last_seen_location`.
+  - `door_opened` / `door_closed` updates entity state.
+- [x] Anomaly & Temporal Omission Engine:
+  - Immediate state-change rule evaluation.
+  - 60-second scheduled heartbeat tick detecting omissions (door open > 30 minutes, missed medication routine).
+  - Triggers deep Bedrock Claude 3.5 Sonnet analysis and caregiver notifications.
 
-### Workstream 3: Self-Hosted MCP Server & API (`context_os/mcp` & `context_os/api`)
-- [ ] Scaffold FastAPI backend app with CORS and standard error handlers.
-- [ ] Implement fast, deterministic MCP Tool Handlers (<50ms execution):
-  - `get_entity_context(entity_name: str)`: 2-hop graph neighborhood retrieval.
-  - `get_recent_events(limit: int = 10, event_type: Optional[str] = None)`: Recent timeline query.
-  - `query_memory_graph(query: str)`: Natural language or keyword semantic retrieval.
-- [ ] Implement SSE / HTTP transport endpoints required for Alexa+ tool binding.
-- [ ] Add public tunnel scripts (`cloudflared` / `ngrok`) for local live Alexa testing.
-- [ ] Build REST endpoints for the frontend:
-  - `GET /api/graph`: Returns active nodes and edges for React Flow.
-  - `GET /api/events/stream`: Server-Sent Events (SSE) broadcasting real-time graph events.
-  - `POST /api/events/inject`: Receives synthetic events from the Injector panel.
-  - `GET /api/audit`: Returns recent Bedrock reasoning chains.
+### Workstream 3: Self-Hosted MCP Server & API (`backend/app/mcp/server.py`, `router.py`)
+- [x] Scaffold FastAPI backend app with CORS, health check, and error handlers.
+- [x] Fast, deterministic MCP Tool Handlers (<50ms execution SLA):
+  - `get_entity_context(entity_name)`: 2-hop graph neighborhood retrieval.
+  - `get_recent_events(limit, event_type)`: Recent timeline query.
+  - `query_memory_graph(query)`: Semantic and keyword lookup over graph entities.
+- [x] Standard Model Context Protocol (MCP) JSON-RPC 2.0 endpoint (`POST /mcp`) for Alexa+ binding.
+- [x] REST endpoints for frontend and voice simulation (`POST /api/mcp/call`, `GET /api/mcp/tools`).
 
-### Workstream 4: Amazon Bedrock Integration (`context_os/ai`)
-- [ ] Configure `boto3` Bedrock client targeting AWS region with Claude 3.5 Sonnet enabled.
-- [ ] Implement asynchronous context reasoning service:
-  - Formulate structured prompt embedding entity subgraphs.
-  - Enforce system prompt requiring `<thinking>...</thinking>` XML tags.
-  - Regex extraction parser to store thinking in `action_audit_logs.thinking_process`.
+### Workstream 4: Amazon Bedrock Integration (`backend/app/ai/bedrock_client.py`, `agent.py`)
+- [x] Dual-tier Bedrock architecture:
+  - Fast conversational tier: Claude 3.5 Haiku (<250 token budget, <1.5s voice turnaround).
+  - Deep reasoning tier: Claude 3.5 Sonnet processing complex subgraphs.
+- [x] System prompt enforcing `<thinking>...</thinking>` XML tags and regex extractor.
+- [x] Audit trail persistence: Stores exact reasoning steps in `action_audit_logs.thinking_process`.
+- [x] Resilient local Bedrock simulator for zero-dependency hackathon testing.
 
-### Workstream 5: Caregiver Trust Dashboard (`frontend/`)
-- [ ] Initialize Next.js 14+ (App Router) with Tailwind CSS and Lucide icons.
-- [ ] Implement React Flow canvas visualizing the ContextOS Memory Graph (Rooms, Devices, People, Objects).
-- [ ] Connect SSE stream (`/api/events/stream`) to animate nodes and edges in real time.
-- [ ] Build Reasoning Drawer / Audit Log viewer rendering Claude's `<thinking>` chain of thought.
-
-### Workstream 6: Simulated Event Injector & Voice Harness (`frontend/` & `tests/`)
-- [ ] Build web UI control panel with one-click trigger buttons:
-  - "Ringing Doorbell"
-  - "Front Door Left Open"
-  - "Move Glasses to Kitchen Table"
-  - "Kitchen Motion at 2 AM"
-- [ ] Implement Simulated Alexa+ Voice Harness:
-  - Text and voice-input widget that talks directly to the MCP tools, guaranteeing an end-to-end interactive pitch even without active Alexa hardware.
-- [ ] Write automated integration test script running the complete 3-minute hackathon demo script.
+### Workstream 5 & 6: Caregiver Trust Dashboard & Voice Simulator (`backend/app/static/dashboard.html` & `frontend/`)
+- [x] Live Interactive Semantic Memory Graph visualizer with real-time SSE animation.
+- [x] Interactive 2-Hop Neighborhood Context Inspector.
+- [x] Simulated Event Injector panel with instant one-click scenario buttons (Visitor, Glasses, Door Open Anomaly, Missed Medication).
+- [x] Simulated Alexa+ Voice Harness with Web Speech TTS audio readout and <50ms Voice SLA benchmark badge.
+- [x] "Why Did You Do That?" CoT Drawer displaying raw Bedrock Claude 3.5 `<thinking>` steps.
+- [x] Automated end-to-end integration test (`backend/tests/test_e2e_demo_narrative.py`) running the complete 3-minute pitch scenario.
 
 ---
 
