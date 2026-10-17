@@ -5,6 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
 from app.ai.agent import ContextOSAgent
+from app.ai.permissions import permission_gate, ActionRequest, PermissionDecision
+from app.ai.bedrock_client import bedrock_client
 from app.models.audit import ActionAuditLog
 from app.schemas.audit import AuditLogRead
 
@@ -49,3 +51,32 @@ async def get_audit_record(
         output_response=record.output_response,
         created_at=record.created_at
     )
+
+@router.get("/api/agent/permissions")
+async def get_permission_rules():
+    """Returns active permission level policies for smart home actions."""
+    return {"policy": permission_gate.get_policy()}
+
+@router.post("/api/agent/actions/evaluate", response_model=PermissionDecision)
+async def evaluate_agent_action(action: ActionRequest):
+    """Evaluates an AI-proposed action against the 5-level permission policy."""
+    return await permission_gate.evaluate_action(action)
+
+@router.get("/api/agent/confirmations/pending")
+async def get_pending_confirmations():
+    """Returns all actions currently awaiting user/caregiver confirmation."""
+    return {"pending_confirmations": permission_gate.get_pending_confirmations()}
+
+class ResolveConfirmationRequest(BaseModel):
+    approved: bool = Field(..., description="True to execute the action, False to reject")
+
+@router.post("/api/agent/confirmations/{token}/resolve")
+async def resolve_pending_confirmation(token: str, req: ResolveConfirmationRequest):
+    """User or caregiver approves/rejects a pending smart-home action."""
+    return await permission_gate.resolve_confirmation(token, req.approved)
+
+@router.get("/api/agent/aws-status")
+async def check_aws_status():
+    """Checks AWS Bedrock IAM credentials and runtime status."""
+    return await bedrock_client.verify_aws_credentials()
+
