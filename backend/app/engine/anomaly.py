@@ -129,4 +129,104 @@ class AnomalyDetector:
                             "data": anomaly_record
                         })
 
+        # Rule 3: Check Wandering / Late Night Exterior Door Open (23:00 - 05:00)
+        hour = now.hour
+        is_night = (hour >= 23 or hour < 5)
+        if is_night:
+            for entity in all_entities:
+                meta = entity.metadata_ or {}
+                if meta.get("state") == "open" and ("door" in entity.name.lower() or "entrance" in entity.name.lower()):
+                    anomaly_desc = f"Wandering Risk: Exterior door '{entity.name}' opened during late night ({now.strftime('%H:%M')})."
+                    evt = await self.repo.create_event(
+                        event_type="wandering_risk_detected",
+                        source_device="contextos_temporal_clock",
+                        payload={
+                            "target": entity.name,
+                            "rule": "nighttime_wandering_risk",
+                            "time": now.strftime("%H:%M"),
+                            "severity": "high"
+                        },
+                        occurred_at=now
+                    )
+
+                    ai_result = await self.agent.deep_reasoning_inference(
+                        event_id=evt.id,
+                        topic=anomaly_desc,
+                        context_subgraph={
+                            "entity": entity.name,
+                            "state": "open",
+                            "hour": hour,
+                            "risk": "dementia_wandering_risk"
+                        }
+                    )
+
+                    anomaly_record = {
+                        "type": "wandering_alert",
+                        "title": "Critical: Nighttime Wandering Risk",
+                        "description": anomaly_desc,
+                        "event_id": evt.id,
+                        "audit_id": ai_result["audit_id"],
+                        "thinking_process": ai_result["thinking_process"],
+                        "recommendation": ai_result["analysis"],
+                        "occurred_at": now.isoformat()
+                    }
+                    detected_anomalies.append(anomaly_record)
+                    await broadcaster.broadcast({
+                        "type": "anomaly_alert",
+                        "data": anomaly_record
+                    })
+
+        # Rule 4: Check Extended Bathroom Inactivity (Potential Fall / Distress)
+        for entity in all_entities:
+            meta = entity.metadata_ or {}
+            if "bathroom" in entity.name.lower():
+                if meta.get("occupied") is True:
+                    entry_time_str = meta.get("occupied_since")
+                    if entry_time_str:
+                        try:
+                            entry_time = datetime.fromisoformat(entry_time_str)
+                            if (now - entry_time) > timedelta(minutes=45):
+                                duration_min = round((now - entry_time).total_seconds() / 60)
+                                anomaly_desc = f"Fall Risk Alert: Bathroom occupied for {duration_min} minutes with no motion detected."
+                                evt = await self.repo.create_event(
+                                    event_type="fall_risk_detected",
+                                    source_device="contextos_temporal_clock",
+                                    payload={
+                                        "target": entity.name,
+                                        "rule": "bathroom_extended_inactivity",
+                                        "duration_minutes": duration_min,
+                                        "severity": "high"
+                                    },
+                                    occurred_at=now
+                                )
+
+                                ai_result = await self.agent.deep_reasoning_inference(
+                                    event_id=evt.id,
+                                    topic=anomaly_desc,
+                                    context_subgraph={
+                                        "location": entity.name,
+                                        "duration_minutes": duration_min,
+                                        "risk": "possible_fall_or_distress"
+                                    }
+                                )
+
+                                anomaly_record = {
+                                    "type": "fall_risk_alert",
+                                    "title": "Urgent: Potential Bathroom Fall Detected",
+                                    "description": anomaly_desc,
+                                    "event_id": evt.id,
+                                    "audit_id": ai_result["audit_id"],
+                                    "thinking_process": ai_result["thinking_process"],
+                                    "recommendation": ai_result["analysis"],
+                                    "occurred_at": now.isoformat()
+                                }
+                                detected_anomalies.append(anomaly_record)
+                                await broadcaster.broadcast({
+                                    "type": "anomaly_alert",
+                                    "data": anomaly_record
+                                })
+                        except Exception:
+                            pass
+
         return detected_anomalies
+

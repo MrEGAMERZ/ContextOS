@@ -5,6 +5,7 @@ from app.engine.ingestion import IngestionEngine
 from app.engine.anomaly import AnomalyDetector
 from app.engine.stream import broadcaster
 from app.schemas.event import EventCreate
+from app.schemas.graph import EntityCreate
 from app.repository.graph_repo import GraphRepository
 
 class EventInjector:
@@ -101,6 +102,49 @@ class EventInjector:
                 "description": "Simulated missed morning medication routine.",
                 "anomalies_detected": anomalies
             }
+
+        elif scenario_name in ("wandering_nighttime", "nighttime_wandering"):
+            # Scenario 5: Wandering Risk (Door opened at 2:30 AM)
+            door = await self.repo.get_entity_by_name("Front Door")
+            if not door:
+                door = await self.repo.create_entity(EntityCreate(name="Front Door", entity_type="device", metadata={"state": "closed"}))
+            
+            night_time = now.replace(hour=2, minute=30)
+            meta = dict(door.metadata_ or {})
+            meta["state"] = "open"
+            meta["last_state_change"] = night_time.isoformat()
+            door.metadata_ = meta
+            door.updated_at = night_time
+            await self.session.commit()
+
+            anomalies = await self.anomaly.evaluate_tick(current_time=night_time)
+            return {
+                "scenario": scenario_name,
+                "description": "Simulated late night wandering risk (Front door open at 02:30 AM).",
+                "anomalies_detected": anomalies
+            }
+
+        elif scenario_name in ("bathroom_fall", "bathroom_inactivity"):
+            # Scenario 6: Potential Fall in Bathroom
+            bathroom = await self.repo.get_entity_by_name("Master Bathroom")
+            if not bathroom:
+                bathroom = await self.repo.create_entity(EntityCreate(name="Master Bathroom", entity_type="location"))
+            
+            fifty_mins_ago = (now - timedelta(minutes=50)).isoformat()
+            meta = dict(bathroom.metadata_ or {})
+            meta["occupied"] = True
+            meta["occupied_since"] = fifty_mins_ago
+            bathroom.metadata_ = meta
+            bathroom.updated_at = now
+            await self.session.commit()
+
+            anomalies = await self.anomaly.evaluate_tick(current_time=now)
+            return {
+                "scenario": scenario_name,
+                "description": "Simulated extended bathroom inactivity (Potential fall after 50 minutes).",
+                "anomalies_detected": anomalies
+            }
+
 
         else:
             # Custom event
