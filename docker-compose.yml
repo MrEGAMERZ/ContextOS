@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: contextos-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PROJECT_NAME=ContextOS
+      - VERSION=0.10.0
+      - DATABASE_URL=sqlite+aiosqlite:///./contextos.db
+      - AWS_REGION=us-east-1
+      - MOCK_BEDROCK=true
+      - BEDROCK_MODEL_ID_FAST=anthropic.claude-3-5-haiku-20241022-v1:0
+      - BEDROCK_MODEL_ID_DEEP=anthropic.claude-3-5-sonnet-20241022-v2:0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: contextos-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

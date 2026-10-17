@@ -94,62 +94,58 @@ Alexa requires responses in **<8 seconds** for natural voice interaction. Contex
 | **Shipment 3** | **Dual-Tier Bedrock Agent & Chain-of-Thought Engine** (Claude 3.5 Haiku/Sonnet, `<thinking>` Extractor, Audit Trail) | `v0.3.0-shipment3` | ✅ Merged | [PR #3](documents/pull_requests/PR-003-bedrock-dual-tier-agent.md) |
 | **Shipment 4** | **Anomaly & Omission Engine + Simulated Event Injector** (60s Temporal Clock, Routine Checking, Demo Presets) | `v0.4.0-shipment4` | ✅ Merged | [PR #4](documents/pull_requests/PR-004-anomaly-omission-engine.md) |
 | **Shipment 5** | **Caregiver Trust Dashboard & Voice Simulator UI** (Interactive UI, React Flow Graph, Live CoT Viewer, Alexa Voice Harness) | `v0.5.0-shipment5` | ✅ Merged | [PR #5](documents/pull_requests/PR-005-dashboard-voice-simulator.md) |
+| **Shipment 6** | **Ring Perception Adapter** (Ding, Motion, Person Detection, Device Graph Sync, Threat Levels, Webhook API) | `v0.6.0-shipment6` | ✅ Merged | [PR #6](documents/pull_requests/PR-006-ring-perception-adapter.md) |
+| **Shipment 7** | **Advanced Anomaly Engine & Caregiver Daily Briefing** (Wandering, Fall/Inactivity, Adherence Score, Digest) | `v0.7.0-shipment7` | ✅ Merged | [PR #7](documents/pull_requests/PR-007-advanced-anomalies-caregiver-summary.md) |
+| **Shipment 8** | **5-Level Permission Barrier & AWS Creds Validator** (Read/Suggest/Confirm/Act/Escalate, STS Health Check) | `v0.8.0-shipment8` | ✅ Merged | [PR #8](documents/pull_requests/PR-008-permission-model-agent-runtime.md) |
+| **Shipment 9** | **Next.js Modular Caregiver Dashboard** (Interactive SVG Graph, Web Speech TTS, Pending Confirmations Modal) | `v0.9.0-shipment9` | ✅ Merged | [PR #9](documents/pull_requests/PR-009-nextjs-modular-dashboard.md) |
+| **Shipment 10** | **Production Dockerization, CI Pipeline & Submission Package** (Docker Compose, CI, Demo Script, Feedback) | `v0.10.0-shipment10` | ✅ Merged | [PR #10](documents/pull_requests/PR-010-docker-cicd-submission-package.md) |
 
 ---
 
 ## 5. Quickstart & Installation
 
-### Prerequisites
-- Python 3.11+
-- Node.js 18+ (optional, for Next.js development)
-
-### 1. Run the Backend & Live Dashboard (One Command)
+### Option A: Docker Compose (Recommended)
+Launch the entire ContextOS stack with a single command:
 ```bash
-# Navigate to repo
+docker compose up --build -d
+```
+- **Caregiver Next.js Dashboard**: [http://localhost:3000](http://localhost:3000)
+- **FastAPI Backend & Swagger**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
+
+### Option B: Local Virtual Environment
+```bash
+# 1. Backend
 cd /Users/rehan/Developer/AmazonHack
-
-# Activate Python virtual environment
 source backend/.venv/bin/activate
-
-# Launch ContextOS
 PYTHONPATH=backend uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
 
-Open your browser to:
-- **Caregiver Trust Dashboard & Voice Simulator**: [http://localhost:8000/dashboard](http://localhost:8000/dashboard)
-- **Interactive OpenAPI Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **MCP Server Endpoint**: `http://localhost:8000/mcp`
-
-### 2. Run Test Suite
-```bash
-PYTHONPATH=backend pytest backend/tests -v
+# 2. Frontend
+cd frontend
+npm install
+npm run dev
 ```
-*Result: 15/15 tests pass in ~0.20s.*
 
 ---
 
-## 6. The 3-Minute Hackathon Demo Narrative
+## 6. Verification & Automated Tests
 
-Open [http://localhost:8000/dashboard](http://localhost:8000/dashboard) and walk judges through this narrative:
+Run the complete 27-test suite covering graph persistence, MCP latency SLA, Bedrock CoT parsing, Ring webhook normalizer, advanced anomaly sweepers, and the 5-level safety permission gate:
+```bash
+PYTHONPATH=backend backend/.venv/bin/pytest backend/tests -v
+```
+```text
+============================== 27 passed in 0.28s ==============================
+```
 
-1. **The Ambient Context**:
-   - Point out Arthur (78-year-old homeowner living independently), his neighbor Ravi, daughter Sarah, and household objects.
-2. **Event Injection — Ravi Arrives**:
-   - In the **Simulated Event Injector**, click **"🔔 Neighbor Visits (Ravi)"**.
-   - Notice the graph updates in real-time via Server-Sent Events (SSE).
-3. **Alexa+ Voice Query**:
-   - In the **Simulated Alexa+ Voice Harness**, click **"Ask Alexa+"** with *"Who is at the front door?"*.
-   - Alexa speaks: *"That's your neighbor Ravi. You spoke with him yesterday about the garden tomato plants, and he was expected to visit around 4:00 PM."*
-   - Latency badge shows `<50ms SLA Pass`.
-4. **"Why Did You Do That?" CoT Drawer**:
-   - Open the CoT drawer to show the judge the raw Bedrock Claude 3.5 `<thinking>` steps:
-     ```text
-     1. Entity Resolution: Received query about front door / visitor.
-     2. Context Retrieval: Identified entity 'Ravi' (neighbor) and 'Front Porch'.
-     3. Relational Verification: Ravi spoke with Arthur yesterday about tomato plants and scheduled a visit for 4 PM.
-     4. Confidence Evaluation: Confidence 0.98; known trusted neighbor.
-     5. Action: Formulate clear, calming answer confirming identity, relationship, and scheduled reason.
-     ```
-5. **Safety Omission Detection**:
-   - In the Injector, click **"🚪 Door Left Open (35m)"**.
-   - The temporal engine evaluates the omission, flags the safety anomaly, invokes Bedrock to analyze the risk, and generates a quiet caregiver check-in notification for Sarah.
+---
+
+## 7. Documentation & Hackathon Deliverables
+
+- 📄 **[Devpost Submission Package](docs/SUBMISSION.md)**: Full project architecture, tracks entered, and technical overview.
+- 🎬 **[3-Minute Live Demo Pitch Script](docs/DEMO_SCRIPT.md)**: Scene-by-scene script with presenter cues and audio playback walkthrough.
+- 📝 **[Developer Friction Log](docs/FRICTION_LOG.md)**: Real-world engineering learnings (Voice SLA, Bedrock CoT parsing, SQLAlchemy async JSON dirty tracking).
+- 💬 **[Amazon Product Feedback](docs/PRODUCT_FEEDBACK.md)**: Actionable feedback for the Alexa+ MCP, Ring, and Amazon Bedrock developer teams.
+- ⚖️ **[MIT License](LICENSE)**: Open source license.
+- 🔄 **[CI/CD Pipeline](ci/ci.yml)**: Continuous integration pipeline specification.
+
