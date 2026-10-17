@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant U as User (Voice)
+    participant A as Alexa+
+    participant M as MCP Server
+    participant DB as Memory Graph DB
+    participant AI as Bedrock Sonnet
+    participant D as Dashboard SSE
+
+    U->>A: "Where are my glasses?"
+    A->>M: tool_call: get_entity_context("glasses")
+    M->>DB: SELECT 2-hop neighborhood
+    Note over DB: < 30ms SQL query
+    DB-->>M: {located_in: "Living Room Table", updated: "2h ago"}
+    M-->>A: structured JSON response
+    A-->>U: "Your glasses are on the living room table."
+
+    Note over M,AI: Async / background path
+    M->>AI: analyze_context(subgraph JSON)
+    AI-->>DB: INSERT action_audit_logs (thinking, output)
+    AI-->>D: SSE: graph_updated event
+    D-->>D: Animate node highlight on dashboard

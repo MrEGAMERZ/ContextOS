@@ -3,12 +3,12 @@
 ## Overview
 ContextOS is an ambient, context-aware AI assistance platform designed to understand human environments, relationships, routines, objects, and events, turning raw sensor noise into contextual understanding and proactive assistance.
 
-**Hackathon Track:** Alexa+ (Self-Hosted Model Context Protocol Server) & Ring (Perception/Event Ingestion)  
-**Mini-Challenge:** AWS Builder (Bedrock Claude 3.5 Sonnet/Haiku dual-tier reasoning with `<thinking>` Chain of Thought)
+**Hackathon Tracks:** Alexa+ (Self-Hosted Model Context Protocol Server) & Ring Track (Perception/Event Ingestion)  
+**Mini-Challenges:** AWS Builder (Bedrock Claude 3.5 Sonnet/Haiku dual-tier reasoning with `<thinking>` Chain of Thought) & Open Source
 
 ---
 
-## 5-Shipment Execution Plan
+## 10-Shipment Complete Execution Plan
 
 | Shipment | Scope | Target Tag | Status | PR |
 |---|---|---|---|---|
@@ -17,6 +17,11 @@ ContextOS is an ambient, context-aware AI assistance platform designed to unders
 | **Shipment 3** | **Dual-Tier Bedrock Agent & Chain-of-Thought Engine** (Claude 3.5 Haiku/Sonnet, `<thinking>` Tag Extraction, Action Audit Logging) | `v0.3.0-shipment3` | Completed | PR #3 |
 | **Shipment 4** | **Anomaly & Omission Engine + Simulated Event Injector** (60s Temporal Clock, Routine Checking, Demo Scenarios) | `v0.4.0-shipment4` | Completed | PR #4 |
 | **Shipment 5** | **Caregiver Trust Dashboard & Voice Simulator** (Next.js UI, React Flow Graph, Live CoT Viewer, Alexa+ Voice Testbed) | `v0.5.0-shipment5` | Completed | PR #5 |
+| **Shipment 6** | **Ring Perception & Ingestion Adapter** (Ding, Motion, Person Detection, Device Graph Sync, Threat Levels, Webhook API) | `v0.6.0-shipment6` | Completed | PR #6 |
+| **Shipment 7** | **Advanced Anomaly Engine, Omission Rules & Caregiver Daily Briefing** (Wandering, Fall/Inactivity, Adherence Score, Digest) | `v0.7.0-shipment7` | In Progress | PR #7 |
+| **Shipment 8** | **Permission Boundary Model & Enhanced Agent Tool-Calling Runtime** (Read/Suggest/Confirm/Act/Escalate, AWS Creds Validator) | `v0.8.0-shipment8` | Queued | PR #8 |
+| **Shipment 9** | **Next.js Modular Caregiver Dashboard with Interactive Visualizers** (Modular Components, SSE Stream, Web Speech TTS) | `v0.9.0-shipment9` | Queued | PR #9 |
+| **Shipment 10** | **Dockerization, CI/CD Pipeline & Complete Hackathon Submission Package** (Docker Compose, GitHub CI, Devpost Docs) | `v0.10.0-shipment10` | Queued | PR #10 |
 
 ---
 
@@ -27,3 +32,5 @@ ContextOS is an ambient, context-aware AI assistance platform designed to unders
   - Issue #3 / PR #3: Bedrock Dual-Tier Agent with `<thinking>` Chain-of-Thought Extractor & Audit Trail.
   - Issue #4 / PR #4: Temporal Omission Worker & Synthetic Event Injector presets.
   - Issue #5 / PR #5: Caregiver Trust UI, Graph Visualizer, CoT Inspector & Alexa Voice Harness.
+- **2026-10-17**:
+  - Issue #6 / PR #6: Ring Doorbell & Camera Perception Adapter, Device Graph Sync, Threat Classification & Webhook Suite.

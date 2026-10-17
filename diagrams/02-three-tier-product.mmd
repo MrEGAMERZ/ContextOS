@@ -1,0 +1,45 @@
+graph LR
+    subgraph Foundation["Tier 1: Foundation (Done)"]
+        DB[(Memory Graph DB)]
+        API[FastAPI Backend]
+        ORM[SQLAlchemy Models]
+        SEED[Household Seed Data]
+        TEST[15 Passing Tests]
+    end
+
+    subgraph Core["Tier 2: Core Features (In Progress)"]
+        ING[Ingestion Engine]
+        MCP[MCP Server - 3 Tools]
+        ANO[Anomaly Engine]
+        BED[Bedrock Dual-Tier AI]
+        SSE[SSE Event Stream]
+        INJ[Event Injector API]
+    end
+
+    subgraph Extra["Tier 3: Extra Features (Backlog)"]
+        DASH[React Flow Dashboard]
+        VOICE[Voice Query Simulator]
+        COT[CoT Audit Drawer]
+        PLUGIN[Adapter Plugin System]
+        MULTI[Multi-Home Multi-Tenant]
+        VIS[Computer Vision Pipeline]
+    end
+
+    DB --> API
+    ORM --> DB
+    SEED --> DB
+    TEST --> API
+
+    API --> ING
+    API --> MCP
+    API --> ANO
+    API --> BED
+    API --> SSE
+    API --> INJ
+
+    SSE --> DASH
+    MCP --> VOICE
+    BED --> COT
+    API --> PLUGIN
+    PLUGIN --> MULTI
+    VIS --> ING

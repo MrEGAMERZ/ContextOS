@@ -19,6 +19,7 @@ from app.schemas.audit import AuditLogRead
 from app.mcp.router import router as mcp_router
 from app.engine.router import router as ingestion_router
 from app.ai.router import router as ai_router
+from app.adapters.router import router as ring_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -48,6 +49,7 @@ app.add_middleware(
 app.include_router(mcp_router)
 app.include_router(ingestion_router)
 app.include_router(ai_router)
+app.include_router(ring_router)
 
 DASHBOARD_PATH = os.path.join(os.path.dirname(__file__), "static", "dashboard.html")
 
