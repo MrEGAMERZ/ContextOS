@@ -114,6 +114,18 @@ class BedrockClient:
                 "5. Action: Report precise location and confidence."
             )
             response = "Your reading glasses were last seen on the living room table about 15 minutes ago."
+        elif "caregiver" in prompt_lower or "briefing" in prompt_lower or "autonomy" in prompt_lower:
+            thinking = (
+                "1. Data Aggregation: Analyzed last 24h event history and routine states.\n"
+                "2. Adherence Scoring: Evaluated morning medication completion and scheduled time.\n"
+                "3. Social Context: Detected neighbor visit from Ravi; healthy social engagement.\n"
+                "4. Anomaly Assessment: Minimal safety concerns; synthesized executive summary."
+            )
+            response = (
+                "1. Health & Routine: Arthur completed morning medication on schedule and maintained stable daily activity.\n"
+                "2. Social & Environmental: Welcomed neighbor Ravi for a garden conversation; steady daytime mobility.\n"
+                "3. Safety & Interventions: Handled minor environmental flags promptly; household state remains peaceful and secure."
+            )
         else:
             thinking = (
                 f"1. Analyzed query against ContextOS semantic graph.\n"
@@ -126,3 +138,32 @@ class BedrockClient:
             thinking = f"[Mock Fallback: {fallback_reason}]\n" + thinking
 
         return thinking, response
+
+    async def invoke_claude(
+        self,
+        model_tier: str,
+        prompt: str,
+        system_prompt: str = "You are ContextOS ambient AI.",
+        max_tokens: int = 1000
+    ) -> Dict[str, Any]:
+        """Convenience method accepting tier name ('sonnet' or 'haiku')."""
+        if model_tier.lower() == "haiku":
+            model_id = settings.BEDROCK_MODEL_ID_FAST
+        else:
+            model_id = settings.BEDROCK_MODEL_ID_DEEP
+
+        thinking, response = await self.invoke_model(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            model_id=model_id,
+            max_tokens=max_tokens
+        )
+        return {
+            "thinking_process": thinking,
+            "content": response,
+            "model_id": model_id
+        }
+
+
+bedrock_client = BedrockClient()
+

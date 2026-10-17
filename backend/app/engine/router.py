@@ -10,6 +10,7 @@ from app.engine.ingestion import IngestionEngine
 from app.engine.anomaly import AnomalyDetector
 from app.engine.injector import EventInjector
 from app.engine.stream import broadcaster
+from app.engine.caregiver_summary import CaregiverSummaryEngine, CaregiverBriefingResponse
 from app.repository.graph_repo import GraphRepository
 
 router = APIRouter(tags=["Engine & Events"])
@@ -63,3 +64,22 @@ async def stream_live_events(request: Request):
             "X-Accel-Buffering": "no"
         }
     )
+
+@router.get("/api/caregiver/briefing", response_model=CaregiverBriefingResponse)
+async def get_caregiver_briefing(db: AsyncSession = Depends(get_db)):
+    """Generate or retrieve daily compassionate briefing for caregivers."""
+    engine = CaregiverSummaryEngine(db)
+    return await engine.generate_daily_briefing()
+
+@router.get("/api/caregiver/health-score")
+async def get_caregiver_health_score(db: AsyncSession = Depends(get_db)):
+    """Retrieve quantitative autonomy score, adherence, and anomaly metrics."""
+    engine = CaregiverSummaryEngine(db)
+    return await engine.compute_health_metrics()
+
+@router.post("/api/caregiver/briefing/generate", response_model=CaregiverBriefingResponse)
+async def generate_caregiver_briefing(db: AsyncSession = Depends(get_db)):
+    """Force re-synthesizing daily briefing via Bedrock Claude 3.5."""
+    engine = CaregiverSummaryEngine(db)
+    return await engine.generate_daily_briefing()
+
