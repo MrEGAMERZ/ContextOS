@@ -20,8 +20,8 @@ ContextOS is an ambient, context-aware AI assistance platform designed to unders
 | **Shipment 6** | **Ring Perception & Ingestion Adapter** (Ding, Motion, Person Detection, Device Graph Sync, Threat Levels, Webhook API) | `v0.6.0-shipment6` | Completed | PR #6 |
 | **Shipment 7** | **Advanced Anomaly Engine, Omission Rules & Caregiver Daily Briefing** (Wandering, Fall/Inactivity, Adherence Score, Digest) | `v0.7.0-shipment7` | Completed | PR #7 |
 | **Shipment 8** | **Permission Boundary Model & Enhanced Agent Tool-Calling Runtime** (Read/Suggest/Confirm/Act/Escalate, AWS Creds Validator) | `v0.8.0-shipment8` | Completed | PR #8 |
-| **Shipment 9** | **Next.js Modular Caregiver Dashboard with Interactive Visualizers** (Modular Components, SSE Stream, Web Speech TTS) | `v0.9.0-shipment9` | In Progress | PR #9 |
-| **Shipment 10** | **Dockerization, CI/CD Pipeline & Complete Hackathon Submission Package** (Docker Compose, GitHub CI, Devpost Docs) | `v0.10.0-shipment10` | Queued | PR #10 |
+| **Shipment 9** | **Next.js Modular Caregiver Dashboard with Interactive Visualizers** (Modular Components, SSE Stream, Web Speech TTS) | `v0.9.0-shipment9` | Completed | PR #9 |
+| **Shipment 10** | **Dockerization, CI/CD Pipeline & Complete Hackathon Submission Package** (Docker Compose, GitHub CI, Devpost Docs) | `v0.10.0-shipment10` | In Progress | PR #10 |
 
 ---
 
@@ -36,5 +36,7 @@ ContextOS is an ambient, context-aware AI assistance platform designed to unders
   - Issue #6 / PR #6: Ring Doorbell & Camera Perception Adapter, Device Graph Sync, Threat Classification & Webhook Suite.
   - Issue #7 / PR #7: Advanced Anomaly Engine (Wandering & Fall Detector) and Caregiver Daily Executive Briefing & Health Score.
   - Issue #8 / PR #8: 5-Level Permission Model Gate (Read/Suggest/Confirm/Act/Escalate) & Bedrock Credential Verification.
+  - Issue #9 / PR #9: Next.js Modular Caregiver Dashboard with Interactive SVG Graph, Audio TTS, and Safety Approvals.
+
 
 
