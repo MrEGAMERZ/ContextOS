@@ -1,0 +1,36 @@
+graph LR
+    subgraph Hackathon["Hackathon (Now)"]
+        LOCAL[Local Machine]
+        CF[Cloudflare Tunnel]
+        ALEXA[Alexa+ Device]
+        SQLITE[(SQLite DB)]
+    end
+
+    subgraph Production["Production Cloud (Post-Hackathon)"]
+        AR[AWS App Runner]
+        RDS[(Amazon RDS PostgreSQL)]
+        BED2[AWS Bedrock - Same Region]
+        VER[Vercel - Frontend]
+        CF2[CloudFront CDN]
+    end
+
+    subgraph Plugin["Future Plugin Distribution"]
+        NPM[NPM Package]
+        GH[GitHub Actions CI]
+        DOCK[Docker Hub Image]
+        MKTPL[Alexa Skills Marketplace]
+    end
+
+    LOCAL -->|exposes :8000| CF
+    CF -->|HTTPS public URL| ALEXA
+    LOCAL --- SQLITE
+
+    AR -->|asyncpg| RDS
+    AR -->|invoke| BED2
+    VER -->|REST + SSE| AR
+    AR --> CF2
+
+    AR --> NPM
+    NPM --> GH
+    NPM --> DOCK
+    NPM --> MKTPL

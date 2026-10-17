@@ -1,0 +1,57 @@
+graph TD
+    subgraph Adapters["Adapter Layer (Plugin System)"]
+        A1[Alexa+ MCP Adapter]
+        A2[Google Home Adapter]
+        A3[Apple HomeKit Adapter]
+        A4[REST API Adapter]
+        A5[Future Adapters...]
+    end
+
+    subgraph Core["ContextOS Core Engine"]
+        GW[API Gateway & Auth]
+        IE[Ingestion Engine]
+        MG[Memory Graph DB]
+        AE[Anomaly Engine]
+        AI[AI Reasoning Layer]
+        SS[SSE Event Stream]
+    end
+
+    subgraph Bedrock["AWS Bedrock"]
+        H[Claude Haiku - Fast Voice]
+        S[Claude Sonnet - Deep Reasoning]
+    end
+
+    subgraph DB["Persistence"]
+        PG[(PostgreSQL / SQLite)]
+        AL[Audit Logs]
+    end
+
+    subgraph UI["User Interfaces"]
+        D[Caregiver Dashboard]
+        V[Voice Harness Simulator]
+    end
+
+    A1 -->|tool calls| GW
+    A2 -->|tool calls| GW
+    A3 -->|tool calls| GW
+    A4 -->|REST| GW
+
+    GW --> IE
+    GW --> MG
+    GW --> AE
+    GW --> AI
+
+    IE --> MG
+    AE --> AI
+    MG <--> PG
+    AI --> AL
+    AI --> H
+    AI --> S
+
+    SS --> D
+    SS --> V
+    MG --> SS
+    AE --> SS
+
+    D -->|inject events| GW
+    V -->|query| GW
