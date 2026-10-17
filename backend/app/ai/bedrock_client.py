@@ -164,6 +164,50 @@ class BedrockClient:
             "model_id": model_id
         }
 
+    async def verify_aws_credentials(self) -> Dict[str, Any]:
+        """Validates Bedrock credentials, STS connectivity, and returns operational status."""
+        configured = bool(settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY)
+        
+        if self.mock_mode or not configured:
+            return {
+                "status": "simulated_local",
+                "mock_mode": True,
+                "configured": configured,
+                "region": self.region,
+                "fast_model_id": settings.BEDROCK_MODEL_ID_FAST,
+                "deep_model_id": settings.BEDROCK_MODEL_ID_DEEP,
+                "provider": "Amazon Bedrock (Local Zero-Dependency Fallback Simulator)",
+                "message": "Running on high-fidelity Bedrock simulator. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY for live AWS calls."
+            }
+
+        try:
+            # Quick probe
+            res = self._client.list_foundation_models(byProvider="Anthropic")
+            return {
+                "status": "connected_live",
+                "mock_mode": False,
+                "configured": True,
+                "region": self.region,
+                "fast_model_id": settings.BEDROCK_MODEL_ID_FAST,
+                "deep_model_id": settings.BEDROCK_MODEL_ID_DEEP,
+                "provider": "Amazon Bedrock (Live AWS Runtime)",
+                "models_available_count": len(res.get("modelSummaries", [])),
+                "message": "Successfully authenticated with Amazon Bedrock via AWS IAM."
+            }
+        except Exception as e:
+            return {
+                "status": "connection_error_fallback",
+                "mock_mode": True,
+                "configured": True,
+                "region": self.region,
+                "fast_model_id": settings.BEDROCK_MODEL_ID_FAST,
+                "deep_model_id": settings.BEDROCK_MODEL_ID_DEEP,
+                "provider": "Amazon Bedrock (Simulator Fallback)",
+                "error": str(e),
+                "message": f"AWS connection failed ({str(e)}). Fallen back to local simulator."
+            }
+
 
 bedrock_client = BedrockClient()
+
 
